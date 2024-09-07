@@ -26,22 +26,22 @@ all: compile
 
 full: all sync
 
-compile: $(BUILD) $(OBJS) $(BUILD)/bloc
+compile: $(BUILD) $(OBJS) $(BUILD)/blc
 
 clean:
 	@rm -rf $(BUILD)/*
 
 install:
-	@install -m 755 $(BUILD)/bloc $(DESTDIR)$(PREFIX)/bin/
+	@install -m 755 $(BUILD)/blc $(DESTDIR)$(PREFIX)/bin/
 
 sync: # Ugly hack
-	@$(MAKE) $(BUILD)/bloc --always-make --dry-run | grep -wE 'gcc|g\+\+' | grep -w '\-c' | jq -nR '[inputs|{directory:".", command:., file: match(" [^ ]+$$").string[1:]}]' >compile_commands.json
+	@$(MAKE) $(BUILD)/blc --always-make --dry-run | grep -wE 'gcc|g\+\+' | grep -w '\-c' | jq -nR '[inputs|{directory:".", command:., file: match(" [^ ]+$$").string[1:]}]' >compile_commands.json
 	@$(TG) -R --exclude=.git --exclude=build .
 
 $(BUILD)/%.o: $(SRC)/%.c
 	@$(CC) -c -o $@ $(CFLAGS) $<
 
-$(BUILD)/bloc: $(OBJS)
+$(BUILD)/blc: $(OBJS)
 	@$(CC) -o $@ $(CFLAGS) $^
 
 .PHONY: all compile clean sync
