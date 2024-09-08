@@ -19,16 +19,16 @@ static void encode(Term *term, FILE *fp)
 
 		while (1) {
 			fprintf(fp, "0");
-			stack[stacked++] = term->u.app.rhs;
-			term = term->u.app.lhs;
+			stack[stacked++] = term->u.app.lhs;
+			term = term->u.app.rhs;
 			if (term->type != APP)
 				break;
 		}
 
 		fprintf(fp, "1");
-		encode(term, fp);
-		for (int i = stacked - 1; i >= 0; i--)
+		for (int i = 0; i < stacked; i++)
 			encode(stack[i], fp);
+		encode(term, fp);
 		break;
 	case IDX:
 		for (size_t i = 0; i <= term->u.index; i++)
@@ -54,17 +54,17 @@ static Term *decode(FILE *fp)
 		if (count == 0) {
 			res = term_new(ABS);
 			res->u.abs.body = decode(fp);
-		} else { // foldl1
-			res = term_new(APP);
+		} else {
+			Term *head = term_new(APP);
+			res = head;
+			for (size_t i = 0; i < count - 1; i++) {
+				res->u.app.lhs = decode(fp);
+				res->u.app.rhs = term_new(APP);
+				res = res->u.app.rhs;
+			}
 			res->u.app.lhs = decode(fp);
 			res->u.app.rhs = decode(fp);
-
-			for (size_t i = 0; i < count - 1; i++) {
-				Term *prev = res;
-				res = term_new(APP);
-				res->u.app.lhs = prev;
-				res->u.app.rhs = decode(fp);
-			}
+			res = head;
 		}
 	} else if (a == '1') {
 		res = term_new(IDX);
@@ -79,10 +79,10 @@ static Term *decode(FILE *fp)
 	return res;
 }
 
-Impl impl_app(void)
+Impl impl_app_right(void)
 {
 	return (Impl){
-		.name = "app",
+		.name = "app_right",
 		.encode = encode,
 		.decode = decode,
 	};

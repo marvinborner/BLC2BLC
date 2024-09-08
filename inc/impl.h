@@ -17,7 +17,10 @@ typedef struct {
 Impl impl_blc(void);
 Impl impl_blc2(void);
 Impl impl_closed(void);
-Impl impl_app(void);
+Impl impl_app_left(void);
+Impl impl_app_right(void);
+Impl impl_app_both(void);
 Impl impl_abs(void);
+Impl impl_abs_app_left(void);
 
 #endif
