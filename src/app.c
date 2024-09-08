@@ -8,13 +8,27 @@ static void encode(Term *term, FILE *fp)
 {
 	switch (term->type) {
 	case ABS:
-		fprintf(fp, "00");
+		fprintf(fp, "01");
 		encode(term->u.abs.body, fp);
 		break;
 	case APP:
-		fprintf(fp, "01");
-		encode(term->u.app.lhs, fp);
-		encode(term->u.app.rhs, fp);
+		fprintf(fp, "0");
+
+		Term *stack[128] = { 0 }; // TODO: HEAP!
+		int stacked = 0;
+
+		while (1) {
+			fprintf(fp, "0");
+			stack[stacked++] = term->u.app.rhs;
+			term = term->u.app.lhs;
+			if (term->type != APP)
+				break;
+		}
+
+		fprintf(fp, "1");
+		encode(term, fp);
+		for (int i = stacked - 1; i >= 0; i--)
+			encode(stack[i], fp);
 		break;
 	case IDX:
 		for (size_t i = 0; i <= term->u.index; i++)
@@ -33,14 +47,24 @@ static Term *decode(FILE *fp)
 	char a = getc(fp);
 
 	if (a == '0') {
-		char b = getc(fp);
-		if (b == '0') {
+		size_t count = 0;
+		while (getc(fp) == '0')
+			count++;
+
+		if (count == 0) {
 			res = term_new(ABS);
 			res->u.abs.body = decode(fp);
-		} else if (b == '1') {
+		} else { // foldl1
 			res = term_new(APP);
 			res->u.app.lhs = decode(fp);
 			res->u.app.rhs = decode(fp);
+
+			for (size_t i = 0; i < count - 1; i++) {
+				Term *prev = res;
+				res = term_new(APP);
+				res->u.app.lhs = prev;
+				res->u.app.rhs = decode(fp);
+			}
 		}
 	} else if (a == '1') {
 		res = term_new(IDX);
@@ -55,10 +79,10 @@ static Term *decode(FILE *fp)
 	return res;
 }
 
-Impl impl_blc(void)
+Impl impl_app(void)
 {
 	return (Impl){
-		.name = "blc",
+		.name = "app",
 		.encode = encode,
 		.decode = decode,
 	};

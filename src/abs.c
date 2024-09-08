@@ -8,7 +8,13 @@ static void encode(Term *term, FILE *fp)
 {
 	switch (term->type) {
 	case ABS:
-		fprintf(fp, "00");
+		while (1) {
+			fprintf(fp, "0");
+			if (term->u.abs.body->type != ABS)
+				break;
+			term = term->u.abs.body;
+		}
+		fprintf(fp, "01");
 		encode(term->u.abs.body, fp);
 		break;
 	case APP:
@@ -33,14 +39,24 @@ static Term *decode(FILE *fp)
 	char a = getc(fp);
 
 	if (a == '0') {
-		char b = getc(fp);
-		if (b == '0') {
-			res = term_new(ABS);
-			res->u.abs.body = decode(fp);
-		} else if (b == '1') {
+		size_t count = 0;
+		while (getc(fp) == '0')
+			count++;
+
+		if (count == 0) {
 			res = term_new(APP);
 			res->u.app.lhs = decode(fp);
 			res->u.app.rhs = decode(fp);
+		} else {
+			Term *head = term_new(ABS);
+
+			res = head;
+			for (size_t i = 0; i < count - 1; i++) {
+				res->u.abs.body = term_new(ABS);
+				res = res->u.abs.body;
+			}
+			res->u.abs.body = decode(fp);
+			res = head;
 		}
 	} else if (a == '1') {
 		res = term_new(IDX);
@@ -55,10 +71,10 @@ static Term *decode(FILE *fp)
 	return res;
 }
 
-Impl impl_blc(void)
+Impl impl_abs(void)
 {
 	return (Impl){
-		.name = "blc",
+		.name = "abs",
 		.encode = encode,
 		.decode = decode,
 	};

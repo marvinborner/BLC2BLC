@@ -44,7 +44,8 @@ void term_diff(Term *a, Term *b)
 		print_bruijn(a);
 		fprintf(stderr, "\nTerm b: ");
 		print_bruijn(b);
-		fatal("\ntype mismatch %d %d\n", a->type, b->type);
+		fprintf(stderr, "\n");
+		fatal("type mismatch %d %d\n", a->type, b->type);
 	}
 
 	switch (a->type) {

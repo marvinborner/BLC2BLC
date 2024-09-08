@@ -7,7 +7,7 @@ TG = ctags
 BUILD = ${CURDIR}/build
 SRC = ${CURDIR}/src
 INC = ${CURDIR}/inc
-SRCS = $(wildcard $(SRC)/*.c)
+SRCS = $(wildcard $(SRC)/*.c) $(wildcard $(SRC)/impl/*.c)
 OBJS = $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(SRCS))
 
 CFLAGS_DEBUG = -fsanitize=address,leak,undefined -g -O0
@@ -29,7 +29,7 @@ full: all sync
 compile: $(BUILD) $(OBJS) $(BUILD)/blc
 
 clean:
-	@rm -rf $(BUILD)/*
+	@rm -rf $(BUILD)/
 
 install:
 	@install -m 755 $(BUILD)/blc $(DESTDIR)$(PREFIX)/bin/
@@ -47,4 +47,4 @@ $(BUILD)/blc: $(OBJS)
 .PHONY: all compile clean sync
 
 $(BUILD):
-	@mkdir -p $@
+	@mkdir -p $@ $@/impl/

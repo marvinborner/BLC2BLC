@@ -16,15 +16,12 @@ Term *parse_blc_fp(FILE *fp)
 		if (b == '0') {
 			res = term_new(ABS);
 			res->u.abs.body = parse_blc_fp(fp);
-		}
-		if (b == '1') {
+		} else if (b == '1') {
 			res = term_new(APP);
 			res->u.app.lhs = parse_blc_fp(fp);
 			res->u.app.rhs = parse_blc_fp(fp);
 		}
-	}
-
-	if (a == '1') {
+	} else if (a == '1') {
 		res = term_new(IDX);
 		res->u.index = 0;
 		while (getc(fp) == '1')
